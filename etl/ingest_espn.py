@@ -91,6 +91,60 @@ def ingest_espn_data():
     else:
         print("  -> No matchup data found (season might not have started or error).")
 
+    # 2.5 Extract Matchup Player Details (for Weekly Projections)
+    print("Extracting Matchup Player Details (Projections)...")
+    matchup_players_data = []
+    
+    # We re-iterate or use the previously fetched box_scores if we stored them, 
+    # but for simplicity/cleanness let's fetch again or just iterate weeks again.
+    # To save time, let's just do the current week + previous weeks? detailed history is good.
+    for week in range(1, 19):
+        try:
+            box_scores = league.box_scores(week=week)
+            if not box_scores:
+                break
+            
+            for match in box_scores:
+                # Process Home Lineup
+                if hasattr(match, 'home_lineup'):
+                    for p in match.home_lineup:
+                        matchup_players_data.append({
+                            "week": week,
+                            "team_id": match.home_team.team_id if match.home_team else None,
+                            "player_id": p.playerId,
+                            "player_name": p.name,
+                            "slot_position": p.slot_position,
+                            "projected_points": getattr(p, 'projected_points', 0.0),
+                            "points": p.points
+                        })
+                # Process Away Lineup
+                if hasattr(match, 'away_lineup'):
+                    for p in match.away_lineup:
+                        matchup_players_data.append({
+                            "week": week,
+                            "team_id": match.away_team.team_id if match.away_team else None,
+                            "player_id": p.playerId,
+                            "player_name": p.name,
+                            "slot_position": p.slot_position,
+                            "projected_points": getattr(p, 'projected_points', 0.0),
+                            "points": p.points
+                        })
+                        
+        except Exception as e:
+            # Week might not exist yet
+            pass
+
+    if matchup_players_data:
+        df_mp = pl.DataFrame(matchup_players_data)
+        print(f"  -> Found {len(df_mp)} player-week entries.")
+        df_mp.write_database(
+            table_name="bronze_espn_matchup_players",
+            connection=DB_PATH,
+            if_table_exists="replace",
+            engine="adbc"
+        )
+        print("  -> Saved to bronze_espn_matchup_players.")
+
     # 3. Extract Draft Data
     print("Extracting Draft Data...")
     try:
@@ -131,6 +185,8 @@ def ingest_espn_data():
                 "position": player.position,
                 "pro_team": player.proTeam,
                 "is_injured": player.injured,
+                "injury_status": str(player.injuryStatus),
+                "lineup_slot": player.lineupSlot,
                 "projected_total_points": player.projected_total_points,
                 "total_points": player.total_points
             })

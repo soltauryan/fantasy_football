@@ -17,4 +17,6 @@ dependencies = [
     "altair>=6.0.0",
     "espn-api>=0.45.1",
     "scikit-learn>=1.8.0",
+    "jupyter>=1.1.1",
+    "notebook>=7.5.2",
 ]

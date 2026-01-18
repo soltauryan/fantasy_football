@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import time
+import os
 
 def run_step(script_path, description):
     print(f"\n{'='*60}")
@@ -26,17 +27,19 @@ def main():
     print("Starting Fantasy Football Data Pipeline...")
     overall_start = time.time()
 
+
+
     # 1. Bronze Layer (Ingestion)
-    run_step("etl/ingest_bronze.py", "Bronze Layer Ingestion")
+    run_step(os.path.join("etl", "ingest_bronze.py"), "Bronze Layer Ingestion")
 
     # 2. Silver Layer (Transformation)
-    run_step("etl/transform_silver.py", "Silver Layer Transformation")
+    run_step(os.path.join("etl", "transform_silver.py"), "Silver Layer Transformation")
 
     # 3. Gold Layer (Master Rankings)
-    run_step("etl/generate_master_rankings.py", "Gold Layer (Master Rankings)")
+    run_step(os.path.join("etl", "generate_master_rankings.py"), "Gold Layer (Master Rankings)")
 
     # 4. Analytics (EDA)
-    run_step("eda/analyze_nextgen.py", "Exploratory Data Analysis")
+    run_step(os.path.join("eda", "analyze_nextgen.py"), "Exploratory Data Analysis")
 
     overall_duration = time.time() - overall_start
     print(f"\n{'='*60}")

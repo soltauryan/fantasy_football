@@ -2,7 +2,11 @@ import polars as pl
 import sqlite3
 import os
 
-DB_PATH = r"c:\Users\solta\repos\fantasy_football\data\nfl.db"
+import polars as pl
+import sqlite3
+import os
+
+DB_PATH = os.path.join("data", "nfl.db")
 
 def get_connection():
     return sqlite3.connect(DB_PATH)
