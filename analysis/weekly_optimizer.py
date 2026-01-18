@@ -1,5 +1,9 @@
-import polars as pl
 import argparse
+import sys
+import polars as pl
+
+# Force utf-8 output for Windows terminals
+sys.stdout.reconfigure(encoding='utf-8')
 
 DB_PATH = "sqlite:///data/nfl.db"
 
