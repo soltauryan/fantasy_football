@@ -1,24 +1,12 @@
 import polars as pl
 import sqlite3
 import os
+import sys
 
-import polars as pl
-import sqlite3
-import os
+# Add project root to path to import utils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-DB_PATH = os.path.join("data", "nfl.db")
-
-def get_connection():
-    return sqlite3.connect(DB_PATH)
-
-def read_sqlite_robust(query, conn):
-    # Use sqlite3 to fetch data into list of dicts to avoid Polars inference panics
-    # SQLite's loose typing can cause Polars to fail during schema inference
-    cursor = conn.cursor()
-    cursor.execute(query)
-    columns = [description[0] for description in cursor.description]
-    data = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    return pl.from_dicts(data, infer_schema_length=None)
+from utils.db import get_connection, read_sqlite_robust, DB_PATH
 
 def transform_players(conn):
     print("Transforming silver_players...")

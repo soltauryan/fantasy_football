@@ -19,4 +19,6 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "jupyter>=1.1.1",
     "notebook>=7.5.2",
+    "lightgbm>=4.6.0",
+    "textual>=7.5.0",
 ]

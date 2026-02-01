@@ -1,6 +1,11 @@
 import os
+import sys
 import polars as pl
 from espn_api.football import League
+
+# Add project root to path to import utils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils.db import DB_PATH
 
 # Configuration
 LEAGUE_ID = 1365062471
@@ -9,7 +14,7 @@ SEASON_YEAR = 2025
 SWID = "{D2241401-9D06-46E7-84DB-B5878BA69DBD}"
 ESPN_S2 = "AEA6s487YT1GrFEFWnpw0MpjPtXYDjNQ%2Fn%2FD%2B9A2GMwtEY5lnL%2B3rrL9bwWJX6oxs8gS4%2B3QBkDBRTCtVxeFc1SWRGYAbSZps5Jp1qFQJqWLO8KzdwVRKrIYVChYEQHqVEydsFdM30uIc3%2BFeGxjcIWln7nOJg8BFIDt0TJAhJpA6a8RgAcx9xZxIraTaia7z%2F1VXAytigfjLKy7ErgnA9SuojVObO5wsx852FuWL4K0PMl9VfIpSaVkVyq9KWtIdAmPANB4EM7boPSO9YhXrx%2FBasgmSITqBgOMzZNeJpKe4E3RX%2F1NpJmg7nmebZLcLpmdnF0Da807qmpHG5Qwfz93"
 
-DB_PATH = "sqlite:///data/nfl.db"
+DB_CONNECTION = f"sqlite:///{DB_PATH}"
 
 def ingest_espn_data():
     print(f"Connecting to ESPN League {LEAGUE_ID} ({SEASON_YEAR})...")
@@ -43,7 +48,7 @@ def ingest_espn_data():
         print(f"  -> Found {len(df_teams)} teams.")
         df_teams.write_database(
             table_name="bronze_espn_teams",
-            connection=DB_PATH,
+            connection=DB_CONNECTION,
             if_table_exists="replace",
             engine="adbc"
         )
@@ -83,7 +88,7 @@ def ingest_espn_data():
         print(f"  -> Found {len(df_matchups)} matchups.")
         df_matchups.write_database(
             table_name="bronze_espn_matchups",
-            connection=DB_PATH,
+            connection=DB_CONNECTION,
             if_table_exists="replace",
             engine="adbc"
         )
@@ -139,7 +144,7 @@ def ingest_espn_data():
         print(f"  -> Found {len(df_mp)} player-week entries.")
         df_mp.write_database(
             table_name="bronze_espn_matchup_players",
-            connection=DB_PATH,
+            connection=DB_CONNECTION,
             if_table_exists="replace",
             engine="adbc"
         )
@@ -165,7 +170,7 @@ def ingest_espn_data():
             print(f"  -> Found {len(df_draft)} draft picks.")
             df_draft.write_database(
                 table_name="bronze_espn_draft",
-                connection=DB_PATH,
+                connection=DB_CONNECTION,
                 if_table_exists="replace",
                 engine="adbc"
             )
@@ -196,7 +201,7 @@ def ingest_espn_data():
         print(f"  -> Found {len(df_rosters)} roster entries.")
         df_rosters.write_database(
             table_name="bronze_espn_rosters",
-            connection=DB_PATH,
+            connection=DB_CONNECTION,
             if_table_exists="replace",
             engine="adbc"
         )
@@ -219,7 +224,7 @@ def ingest_espn_data():
             print(f"  -> Found {len(df_activity)} activity items.")
             df_activity.write_database(
                 table_name="bronze_espn_activity",
-                connection=DB_PATH,
+                connection=DB_CONNECTION,
                 if_table_exists="replace",
                 engine="adbc"
             )
@@ -241,7 +246,7 @@ def ingest_espn_data():
         df_settings = pl.DataFrame(settings_data)
         df_settings.write_database(
             table_name="bronze_espn_league_info",
-            connection=DB_PATH,
+            connection=DB_CONNECTION,
             if_table_exists="replace",
             engine="adbc"
         )
@@ -274,7 +279,7 @@ def ingest_espn_data():
             print(f"  -> Found {len(df_fa)} free agents.")
             df_fa.write_database(
                 table_name="bronze_espn_free_agents",
-                connection=DB_PATH,
+                connection=DB_CONNECTION,
                 if_table_exists="replace",
                 engine="adbc"
             )
