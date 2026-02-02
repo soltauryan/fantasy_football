@@ -397,7 +397,7 @@ class DraftApp(App):
                 f"{pts:.0f}",
                 f"{vor:+.1f}",
                 adp_str,
-                key=row["player_name"]
+                key=row.get("gsis_id") or row["player_name"]
             )
 
         # By ADP
@@ -423,7 +423,7 @@ class DraftApp(App):
                 row["position"],
                 f"{pts:.0f}",
                 f"{vor:+.1f}",
-                key=row["player_name"]
+                key=row.get("gsis_id") or row["player_name"]
             )
 
         # Value picks
@@ -447,7 +447,7 @@ class DraftApp(App):
                 f"{adp:.1f}",
                 str(self.state.pick_number + 1),
                 f"+{value:.1f}",
-                key=row["player_name"]
+                key=row.get("gsis_id") or row["player_name"]
             )
 
         # Recommendations
@@ -472,7 +472,7 @@ class DraftApp(App):
                 f"{pts:.0f}",
                 f"{vor:+.1f}",
                 reason[:30],
-                key=row["player_name"]
+                key=row.get("gsis_id") or row["player_name"]
             )
 
     def _refresh_rosters(self) -> None:
