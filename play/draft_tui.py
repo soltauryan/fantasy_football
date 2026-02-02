@@ -397,7 +397,7 @@ class DraftApp(App):
                 f"{pts:.0f}",
                 f"{vor:+.1f}",
                 adp_str,
-                key=row.get("gsis_id") or row["player_name"]
+                key=f"avail-{i}"
             )
 
         # By ADP
@@ -412,7 +412,7 @@ class DraftApp(App):
         if self.position_filter:
             available = available.filter(pl.col("position") == self.position_filter)
 
-        for row in available.sort("adp").head(50).iter_rows(named=True):
+        for i, row in enumerate(available.sort("adp").head(50).iter_rows(named=True), 1):
             vor = row.get("vor", 0) or 0
             pts = row.get("proj_total_points_2026", 0) or 0
             adp = row.get("adp", 0) or 0
@@ -423,7 +423,7 @@ class DraftApp(App):
                 row["position"],
                 f"{pts:.0f}",
                 f"{vor:+.1f}",
-                key=row.get("gsis_id") or row["player_name"]
+                key=f"adp-{i}"
             )
 
         # Value picks
@@ -437,7 +437,7 @@ class DraftApp(App):
             self.state.pick_number + 1
         )
 
-        for row in value_picks.head(20).iter_rows(named=True):
+        for i, row in enumerate(value_picks.head(20).iter_rows(named=True), 1):
             adp = row.get("adp", 0) or 0
             value = row.get("adp_value", 0) or 0
 
@@ -447,7 +447,7 @@ class DraftApp(App):
                 f"{adp:.1f}",
                 str(self.state.pick_number + 1),
                 f"+{value:.1f}",
-                key=row.get("gsis_id") or row["player_name"]
+                key=f"value-{i}"
             )
 
         # Recommendations
@@ -461,7 +461,7 @@ class DraftApp(App):
             self.state.rosters[self.state.current_team]
         )
 
-        for row in recs.head(15).iter_rows(named=True):
+        for i, row in enumerate(recs.head(15).iter_rows(named=True), 1):
             vor = row.get("vor", 0) or 0
             pts = row.get("proj_pts", 0) or 0
             reason = row.get("reason", "")
@@ -472,7 +472,7 @@ class DraftApp(App):
                 f"{pts:.0f}",
                 f"{vor:+.1f}",
                 reason[:30],
-                key=row.get("gsis_id") or row["player_name"]
+                key=f"rec-{i}"
             )
 
     def _refresh_rosters(self) -> None:
