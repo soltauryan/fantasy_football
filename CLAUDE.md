@@ -406,6 +406,7 @@ Stored in scripts (SWID, ESPN_S2 tokens) - consider moving to `.env`
 ---
 
 ## Known Issues / Tech Debt
+- [ ] **Duplicate players in draft TUI** - Investigate source of duplicates in player list (likely from joins in `load_projections()` or `add_adp_to_projections()`)
 - [ ] ESPN credentials hardcoded (move to .env)
 - [ ] 2025 injury data returns 404 from nflreadpy
 - [ ] Rookie data manually curated (no automated source)
