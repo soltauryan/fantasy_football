@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Draft Assistant TUI - Fantasy Football 2026
+Draft Assistant TUI - Fantasy Football 2026 (PPR)
 
 Simple player rankings with ADP/VOR sorting and position filtering.
 
@@ -279,6 +279,9 @@ class DraftApp(App):
     def action_draft_selected(self) -> None:
         table = self.query_one("#main-table", DataTable)
         if table.cursor_row is not None:
+            # Save cursor position before refresh
+            saved_row = table.cursor_row
+
             row_data = table.get_row_at(table.cursor_row)
             # Player name is always column 1 (index 1)
             name = row_data[1]
@@ -293,13 +296,26 @@ class DraftApp(App):
                 self._update_status()
                 self._refresh_table()
 
+                # Restore cursor position (clamped to valid range)
+                if table.row_count > 0:
+                    new_row = min(saved_row, table.row_count - 1)
+                    table.move_cursor(row=new_row)
+
     def action_undo(self) -> None:
         if self.history:
+            table = self.query_one("#main-table", DataTable)
+            saved_row = table.cursor_row
+
             name = self.history.pop()
             self.drafted.discard(name)
             self.notify(f"Undrafted: {name}", timeout=2)
             self._update_status()
             self._refresh_table()
+
+            # Restore cursor position
+            if table.row_count > 0 and saved_row is not None:
+                new_row = min(saved_row, table.row_count - 1)
+                table.move_cursor(row=new_row)
 
     def action_search(self) -> None:
         search_bar = self.query_one("#search-bar")
@@ -329,7 +345,7 @@ class DraftApp(App):
 def main():
     app = DraftApp()
     app.title = "Draft Assistant"
-    app.sub_title = "Fantasy Football 2026"
+    app.sub_title = "Fantasy Football 2026 • PPR"
     app.run()
 
 

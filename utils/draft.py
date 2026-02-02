@@ -6,6 +6,8 @@ Includes:
 - Position scarcity analysis
 - Best available recommendations
 - Two-team draft coordination
+
+NOTE: All projections use PPR scoring (1 point per reception).
 """
 
 import polars as pl
@@ -13,8 +15,13 @@ from typing import Optional
 from utils.db import get_connection, read_sqlite_robust
 
 
-# Default roster settings (standard ESPN 12-team league)
-# Adjust based on your league settings
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  LEAGUE CONFIGURATION - PPR SCORING
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SCORING_FORMAT = "PPR"  # Full PPR (1 point per reception)
+
+# Default roster settings (ESPN 12-team PPR league)
 ROSTER_SLOTS = {
     "QB": 1,
     "RB": 2,

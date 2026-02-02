@@ -6,6 +6,8 @@ Provides:
 - Trade package comparison
 - Positional scarcity adjustments
 - Two-team trade coordination
+
+NOTE: All values use PPR scoring (1 point per reception).
 """
 
 import polars as pl
@@ -19,12 +21,13 @@ MY_TEAM_IDS = {
     "wife": 9,
 }
 
-# Positional scarcity multipliers (higher = scarcer = more valuable)
+# Positional scarcity multipliers for PPR (higher = scarcer = more valuable)
+# PPR boosts WR/pass-catching RB value relative to standard scoring
 POSITION_SCARCITY = {
-    "QB": 1.0,   # QBs are relatively replaceable
-    "RB": 1.3,   # RBs are scarce, injury-prone
-    "WR": 1.1,   # WRs have depth but top-end matters
-    "TE": 1.2,   # Elite TEs are rare
+    "QB": 1.0,   # QBs are relatively replaceable (streaming viable)
+    "RB": 1.25,  # RBs still scarce, but PPR favors pass-catching backs
+    "WR": 1.2,   # WRs more valuable in PPR (high-target WRs thrive)
+    "TE": 1.15,  # Elite TEs are rare; PPR helps receiving TEs
 }
 
 # Age depreciation (per year over 26)
