@@ -652,8 +652,8 @@ class FantasyTUI(App):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Container(
-            Horizontal(
+        with Container(id="main"):
+            yield Horizontal(
                 Static(" Week:", classes="lbl"),
                 Select([(f"Week {w}", w) for w in range(1, 19)], value=1, id="week-select"),
                 Static("  Team:", classes="lbl"),
@@ -661,20 +661,26 @@ class FantasyTUI(App):
                 Button("Refresh", id="btn-refresh", variant="primary"),
                 Button("Draft TUI", id="btn-draft"),
                 classes="controls",
-            ),
-            TabbedContent(
-                TabPane("Home", DashboardWidget(), id="tab-home"),
-                TabPane("Injuries", InjuriesWidget(), id="tab-injuries"),
-                TabPane("Matchups", MatchupsWidget(week=1), id="tab-matchups"),
-                TabPane("Waivers", WaiversWidget(week=1), id="tab-waivers"),
-                TabPane("Projections", ProjectionsWidget(week=1), id="tab-projections"),
-                TabPane("Rosters", Container(RosterWidget("ryan"), RosterWidget("wife"), id="rosters-box"), id="tab-rosters"),
-                TabPane("Trades", TradesWidget(), id="tab-trades"),
-                TabPane("Playoffs", PlayoffsWidget(), id="tab-playoffs"),
-                TabPane("Bench", BenchWidget("ryan"), id="tab-bench"),
-            ),
-            id="main",
-        )
+            )
+            with TabbedContent():
+                with TabPane("Home", id="tab-home"):
+                    yield DashboardWidget()
+                with TabPane("Injuries", id="tab-injuries"):
+                    yield InjuriesWidget()
+                with TabPane("Matchups", id="tab-matchups"):
+                    yield MatchupsWidget(week=1)
+                with TabPane("Waivers", id="tab-waivers"):
+                    yield WaiversWidget(week=1)
+                with TabPane("Projections", id="tab-projections"):
+                    yield ProjectionsWidget(week=1)
+                with TabPane("Rosters", id="tab-rosters"):
+                    yield Container(RosterWidget("ryan"), RosterWidget("wife"), id="rosters-box")
+                with TabPane("Trades", id="tab-trades"):
+                    yield TradesWidget()
+                with TabPane("Playoffs", id="tab-playoffs"):
+                    yield PlayoffsWidget()
+                with TabPane("Bench", id="tab-bench"):
+                    yield BenchWidget("ryan")
         yield Footer()
 
     def on_select_changed(self, event: Select.Changed) -> None:
