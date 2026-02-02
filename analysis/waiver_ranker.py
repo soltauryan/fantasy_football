@@ -20,9 +20,16 @@ from utils.db import get_connection, read_sqlite_robust
 from utils.weekly import (
     load_free_agents,
     analyze_injury_impact,
+    analyze_injury_impact_espn,
     get_snap_trends,
     get_target_share_trends,
     load_weekly_performance,
+)
+from utils.matchups import (
+    calculate_defense_rankings,
+    load_schedule,
+    get_opponent_for_game,
+    get_matchup_grade,
 )
 
 # Team configuration
@@ -83,10 +90,20 @@ def rank_waiver_pickups(
     """
     # Load data
     free_agents = load_free_agents()
-    injury_opps = analyze_injury_impact(season, week)
+
+    # Use ESPN injury data for 2025+ (nflreadpy returns 404)
+    if season >= 2025:
+        injury_opps = analyze_injury_impact_espn(season)
+    else:
+        injury_opps = analyze_injury_impact(season, week)
+
     snap_trends = get_snap_trends(season)
     target_trends = get_target_share_trends(season)
     weekly = load_weekly_performance(season)
+
+    # Load matchup data
+    def_rankings = calculate_defense_rankings(season)
+    schedule = load_schedule(season, week) if week else load_schedule(season)
 
     # Build rankings
     rankings = []
@@ -101,6 +118,7 @@ def rank_waiver_pickups(
 
         score = 0
         reasons = []
+        matchup_grade = None
 
         # Base score from projected points (normalized)
         score += projected / 10
@@ -112,11 +130,40 @@ def rank_waiver_pickups(
 
         # Check if player is a backup benefiting from injury
         for opp in injury_opps:
-            if opp["backup_player"] == player_name or player_name in opp["backup_player"]:
-                injury_bonus = opp["opportunity_score"]
+            backup_name = opp.get("backup_player", "")
+            if backup_name == player_name or player_name in backup_name:
+                injury_bonus = opp.get("opportunity_score", 0)
                 score += injury_bonus
-                reasons.append(f"Backup to {opp['injured_player']} ({opp['status']})")
+                injured = opp.get("injured_player", "?")
+                status = opp.get("injury_status", opp.get("status", "?"))
+                reasons.append(f"Backup to {injured} ({status})")
                 break
+
+        # Check matchup quality for this week
+        if week and team and position in ["QB", "RB", "WR", "TE"]:
+            opponent = get_opponent_for_game(team, week, schedule)
+            if opponent and not def_rankings.is_empty():
+                def_rank = def_rankings.filter(
+                    (pl.col("defense") == opponent) &
+                    (pl.col("position") == position)
+                )
+                if not def_rank.is_empty():
+                    rank = def_rank["rank"][0]
+                    matchup_grade = get_matchup_grade(rank)
+
+                    # Boost for soft matchups (rank <= 10)
+                    if rank <= 5:
+                        score += 15
+                        reasons.append(f"Smash matchup vs {opponent} ({matchup_grade})")
+                    elif rank <= 10:
+                        score += 10
+                        reasons.append(f"Great matchup vs {opponent} ({matchup_grade})")
+                    elif rank <= 15:
+                        score += 5
+                        reasons.append(f"Good matchup vs {opponent} ({matchup_grade})")
+                    elif rank >= 28:
+                        score -= 5
+                        reasons.append(f"Tough matchup vs {opponent} ({matchup_grade})")
 
         # Check snap trends
         if not snap_trends.is_empty():
@@ -161,6 +208,7 @@ def rank_waiver_pickups(
             "team": team,
             "pct_owned": pct_owned,
             "projected_pts": projected,
+            "matchup_grade": matchup_grade,
             "waiver_score": score,
             "reasons": ", ".join(reasons),
         })
@@ -245,23 +293,28 @@ def print_waiver_rankings(season: int = 2025, week: int = None):
     """Print overall waiver wire rankings."""
     rankings = rank_waiver_pickups(season, week)
 
-    print("\n" + "=" * 70)
-    print("WAIVER WIRE RANKINGS")
-    print("=" * 70)
+    print("\n" + "=" * 80)
+    if week:
+        print(f"WAIVER WIRE RANKINGS - WEEK {week}")
+    else:
+        print("WAIVER WIRE RANKINGS")
+    print("=" * 80)
 
     if rankings.is_empty():
         print("No waiver data available.")
         return
 
-    print(f"{'Rank':<5} {'Player':<22} {'Pos':<4} {'Own%':>6} {'Score':>7}  Reasons")
-    print("-" * 70)
+    print(f"{'Rank':<5} {'Player':<22} {'Pos':<4} {'Own%':>6} {'Match':>6} {'Score':>7}  Reasons")
+    print("-" * 80)
 
     for i, row in enumerate(rankings.iter_rows(named=True), 1):
+        matchup = row.get("matchup_grade") or "-"
         print(
             f"{i:<5} "
             f"{row['player_name'][:21]:<22} "
             f"{row['position']:<4} "
             f"{row['pct_owned']:>5.0f}% "
+            f"{matchup:>6} "
             f"{row['waiver_score']:>7.1f}  "
             f"{row['reasons'][:35]}"
         )
@@ -295,14 +348,16 @@ def print_team_recommendations(team_key: str, season: int = 2025, week: int = No
         print("No recommendations available.")
         return
 
-    print(f"{'Rank':<5} {'Player':<22} {'Pos':<4} {'Score':>7}  Reasons")
-    print("-" * 70)
+    print(f"{'Rank':<5} {'Player':<22} {'Pos':<4} {'Match':>6} {'Score':>7}  Reasons")
+    print("-" * 80)
 
     for i, row in enumerate(recs.iter_rows(named=True), 1):
+        matchup = row.get("matchup_grade") or "-"
         print(
             f"{i:<5} "
             f"{row['player_name'][:21]:<22} "
             f"{row['position']:<4} "
+            f"{matchup:>6} "
             f"{row['waiver_score']:>7.1f}  "
             f"{row['reasons'][:40]}"
         )

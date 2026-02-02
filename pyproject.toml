@@ -22,3 +22,8 @@ dependencies = [
     "lightgbm>=4.6.0",
     "textual>=7.5.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
