@@ -35,7 +35,7 @@ SEASON = 2025
 
 # Two italic F's - Final Fantasy style, sheared to the right
 LOGO = r"""[bold bright_blue]
-    ____//   ____//
+    ______   ______
    //___    //___        [bold bright_cyan]F[/][cyan]ANTASY[/]
   //       //            [bold bright_cyan]F[/][cyan]OOTBALL[/]
  //       //
